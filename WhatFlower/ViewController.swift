@@ -112,8 +112,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         Alamofire.request(wikipediaURL, method: .get, parameters: parameters).responseJSON { response in
             if response.result.isSuccess {
-                let flowerJSON : JSON = JSON(response.result.value!) //JSON casting here comes from SwiftyJSON; not native Swift
+                let flowerJSON : JSON = JSON(response.result.value!)
                 print(flowerJSON)
+                let pageID = flowerJSON["query"]["pageids"][0]
+                print("PageID: \(pageID)")
+                print("Extract: \(flowerJSON["query"]["pages"]["\(pageID)"]["extract"])")
             }
             if let json = response.result.value {
                 print("JSON: \(json)") // serialized json response
