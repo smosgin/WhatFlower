@@ -9,13 +9,16 @@
 import UIKit
 import CoreML
 import Vision
+import Alamofire
+import SwiftyJSON
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
     @IBOutlet weak var imageView: UIImageView!
     
     let imagePicker = UIImagePickerController()
-    
+    let wikipediaURL = "https://en.wikipedia.org/w/api.php?"
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -69,9 +72,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 fatalError("Could not convert to VNClassificationObservation")
             }
             
+            // We have a classification for the flower
             if let firstResult = results.first {
                 print(firstResult.identifier)
                 self.navigationItem.title = firstResult.identifier.capitalized
+                
+                self.getWikiInfo(for: firstResult.identifier)
             }
         }
         
@@ -81,6 +87,41 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             try handler.perform([request])
         } catch {
             print(error)
+        }
+    }
+    
+    func getWikiInfo(for flowerName: String) {
+        let parameters : [String:String] = [
+            "format" : "json",
+            "action" : "query",
+            "prop" : "extracts",
+            "exintro" : "",
+            "explaintext" : "",
+            "titles" : flowerName, //.replacingOccurrences(of: " ", with: "%20"),
+            "indexpageids" : "",
+            "redirects" : "1",
+            ]
+        
+        var requestURL = wikipediaURL
+        
+        for param in parameters {
+            requestURL += "\(param.key)=\(param.value)&"
+        }
+        
+        print(requestURL)
+        
+        Alamofire.request(wikipediaURL, method: .get, parameters: parameters).responseJSON { response in
+            if response.result.isSuccess {
+                let flowerJSON : JSON = JSON(response.result.value!) //JSON casting here comes from SwiftyJSON; not native Swift
+                print(flowerJSON)
+            }
+            if let json = response.result.value {
+                print("JSON: \(json)") // serialized json response
+            }
+            
+            if let data = response.data, let utf8Text = String(data: data, encoding: .utf8) {
+                print("Data: \(utf8Text)") // original server data as UTF8 string
+            }
         }
     }
 
