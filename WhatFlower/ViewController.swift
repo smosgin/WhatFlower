@@ -11,6 +11,7 @@ import CoreML
 import Vision
 import Alamofire
 import SwiftyJSON
+import SDWebImage
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
@@ -51,7 +52,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let userPickedImage = info[UIImagePickerControllerEditedImage] as? UIImage {
-            imageView.image = userPickedImage
             
             guard let ciimage = CIImage(image: userPickedImage) else {
                 fatalError("Could not convert to CIImage")
@@ -96,12 +96,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let parameters : [String:String] = [
             "format" : "json",
             "action" : "query",
-            "prop" : "extracts",
+            "prop" : "extracts|pageimages",
             "exintro" : "",
             "explaintext" : "",
             "titles" : flowerName, //.replacingOccurrences(of: " ", with: "%20"),
             "indexpageids" : "",
             "redirects" : "1",
+            "pithumbsize" : "500"
             ]
         
         var requestURL = wikipediaURL
@@ -116,10 +117,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             if response.result.isSuccess {
                 let flowerJSON : JSON = JSON(response.result.value!)
                 print(flowerJSON)
-                let pageID = flowerJSON["query"]["pageids"][0]
-                print("PageID: \(pageID)")
-                print("Extract: \(flowerJSON["query"]["pages"]["\(pageID)"]["extract"])")
-                self.extractLabel.text = flowerJSON["query"]["pages"]["\(pageID)"]["extract"].stringValue
+                
+                let pageID = flowerJSON["query"]["pageids"][0].stringValue
+                let flowerDescription = flowerJSON["query"]["pages"][pageID]["extract"].stringValue
+                let flowerImageURL = flowerJSON["query"]["pages"][pageID]["thumbnail"]["source"].stringValue
+                
+                self.imageView.sd_setImage(with: URL(string: flowerImageURL))
+                self.extractLabel.text = flowerDescription
             }
             if let json = response.result.value {
                 print("JSON: \(json)") // serialized json response
