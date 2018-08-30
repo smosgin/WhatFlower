@@ -15,6 +15,8 @@ import SwiftyJSON
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
     @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var extractLabel: UILabel!
+    
     
     let imagePicker = UIImagePickerController()
     let wikipediaURL = "https://en.wikipedia.org/w/api.php?"
@@ -117,6 +119,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 let pageID = flowerJSON["query"]["pageids"][0]
                 print("PageID: \(pageID)")
                 print("Extract: \(flowerJSON["query"]["pages"]["\(pageID)"]["extract"])")
+                self.extractLabel.text = flowerJSON["query"]["pages"]["\(pageID)"]["extract"].stringValue
             }
             if let json = response.result.value {
                 print("JSON: \(json)") // serialized json response
